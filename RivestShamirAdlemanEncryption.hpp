@@ -46,18 +46,18 @@ public:
         int k = 25; // fehler quote 1/(4^k)
 
 
-        const boost::random::uniform_int_distribution<uint512_t> intDistribution(1, decremented);
+        const boost::random::uniform_int_distribution<uint512_t> intDistribution(2, decremented);
         std::random_device random_device;
         std::mt19937_64 random(random_device());
-        vector<uint1024_t> testNumVec;
 
 
         for (int i = 0; i < k; i++) {
             uint1024_t testNumOriginal = intDistribution(random);
 
-            uint1024_t testNum = testNumOriginal;
+            uint1024_t testNum = 1;
 
-            testNumVec.clear();
+
+
 
 
 
@@ -65,25 +65,25 @@ public:
             int512_t smallestExpoCopy = smallestExpo;
 
 
-            //Calculate the first number in the table
+            //Calculate the first number in the row
             while (smallestExpoCopy > 0) {
+
                 if ((smallestExpoCopy & 1) == 1) {
                     testNum = (testNum * testNumOriginal) % number;
-                    --smallestExpoCopy;
                 }
 
-                testNum = (testNum * testNum) % number;
+                testNumOriginal = (testNumOriginal * testNumOriginal) % number;
 
-                smallestExpoCopy >>= 1;// /2
+                smallestExpoCopy >>= 1;
             }
 
-            testNumVec.push_back(testNum);
+
+
 
 
             //Testing if it's -1 or 1 if so we break and don't need to continue for this a
             if (testNum == decremented || testNum == 1) {
 
-                cout << testNumVec.at(0) << endl;
                 continue;
             }
 
@@ -95,10 +95,9 @@ public:
 
                 testNum = (testNum * testNum) % number;
 
-                testNumVec.push_back(testNum);
-
-                // -1 in last column
+                //Last column and we didn't have -1 yet so
                 if (exponentCounter == 0) {
+
                     return false;
                 }
 
@@ -109,20 +108,15 @@ public:
                 }
 
                 //gets caught if it's 1 without a -1 before so return false
-                if (testNum == 1) return false;
+                if (testNum == 1) {
+
+                    return false;
+                }
 
 
             }
 
-            cout << testNumOriginal << endl;
-
-            for ( const uint1024_t &testNumIter : testNumVec ) {
-                cout << testNumIter << " ";
-            }
-
-            cout << endl;
-
-            if (testNum != 1) return false;
+            if (testNum != 1 && testNum != decremented) return false;
 
 
 
@@ -150,9 +144,19 @@ public:
     };
 
     static std::pair<uint512_t, uint512_t> createKeys(){
-        uint512_t num1 = 1;
-        uint512_t num2 = 1;
-        return std::make_pair(num1, num2);
+        const uint512_t prime1 = choseRandomPrime();
+        const uint512_t prime2 = choseRandomPrime();
+
+        const uint1024_t module = prime1 * prime2;
+
+        const uint1024_t phiModule = (prime1 - 1) * (prime2 - 1);
+
+
+
+
+        //chose e public exponent
+
+
     };
 
 

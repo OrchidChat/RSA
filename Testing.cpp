@@ -9,14 +9,33 @@ using namespace std;
 
 using namespace boost::multiprecision;
 
+void testExpo() {
+    int testNum = 1;
+    int testNumOriginal = 2;
+    int smallestExpoCopy = 5;
+    int number = 11;
 
+    while (smallestExpoCopy > 0) {
+
+        if ((smallestExpoCopy & 1) == 1) {
+            testNum = (testNum * testNumOriginal) % number;
+        }
+
+        testNumOriginal = (testNumOriginal * testNumOriginal) % number;
+
+        smallestExpoCopy >>= 1;
+    }
+
+
+    cout << testNum << endl;
+}
 
 int main() {
 
 
     // vector<uint512_t> testArr;
     //
-    // for (int i = 5; i < 2000; i += 2) {
+    // for (int i = 5; i < 10000; i += 2) {
     //     testArr.emplace_back(i);
     // }
     //
@@ -42,22 +61,29 @@ int main() {
     // cout << "finish" << endl;
 
 
-    const uint512_t test = 7;
+    // const uint512_t test("85053461164796801949539541639542805770666392330682673302530819774105141531698707146930307290253537320447270457");
+    //
+    // if (RivestShamirAdlemanEncryption::millerRabinTest(test)) {
+    //     cout<< "True";
+    // }
+    // else {
+    //     cout<< "False";
+    // }
+    //
+    // cout << endl;
 
-    if (RivestShamirAdlemanEncryption::millerRabinTest(test)) {
-        cout<< "True";
-    }
-    else {
-        cout<< "False";
-    }
+    cout<< RivestShamirAdlemanEncryption::choseRandomPrime() << endl;
 
-    cout << endl;
 
+    // testExpo();
 
      return 0;
 
 
 }
+
+
+
 
 
 
