@@ -28,6 +28,75 @@ public:
         return random;
     };
 
+
+    static std::string encrypt(const std::string &message, const uint512_t &publicKey, const uint1024_t &module) {
+        std::vector<uint512_t> messageInParts(1);
+
+        int used = 0;
+        int currentPart = 0;
+        uint512_t temp;
+        for (int i = 0; i < message.size(); i++, used += 8) {
+            if (used == 512) {used = 0; currentPart++; messageInParts.emplace_back(0);}
+            temp = message[i];
+            temp <<= used;
+            messageInParts[i] += temp;
+        }
+
+        for (auto & messageInPart : messageInParts) {
+            messageInPart = static_cast<uint512_t>(exponentModulo(messageInPart, publicKey, module));
+        }
+
+        std::string output;
+
+        for (const auto & messageInPart: messageInParts) {
+            output += std::string(reinterpret_cast<const char*>(&messageInPart), sizeof(messageInPart));
+        }
+
+        return output;
+    }
+
+
+    static std::string decrypt(const std::string &message, const uint1024_t &publicKey, const uint1024_t &module) {
+        std::vector<uint512_t> messageInParts(1);
+
+        int used = 0;
+        int currentPart = 0;
+        uint512_t temp;
+        for (int i = 0; i < message.size(); i++, used += 8) {
+            if (used == 512) {used = 0; currentPart++; messageInParts.emplace_back(0);}
+            temp = message[i];
+            temp <<= used;
+            messageInParts[i] += temp;
+        }
+
+        for (auto & messageInPart : messageInParts) {
+            messageInPart = static_cast<uint512_t>(exponentModulo(messageInPart, publicKey, module));
+        }
+
+        std::string output;
+
+        for (const auto & messageInPart: messageInParts) {
+            output += std::string(reinterpret_cast<const char*>(&messageInPart), sizeof(messageInPart));
+        }
+
+        return output;
+    }
+
+    static uint1024_t exponentModulo( uint1024_t input, uint1024_t exponent, const uint1024_t &modulo) {
+        uint1024_t currentState = input;
+        while (exponent > 0) {
+            if ((exponent & 1) == 1) {
+                input = (input * currentState) % modulo;
+            }
+
+            currentState = (currentState * currentState) % modulo;
+
+            exponent >>= 1;
+        }
+
+        return input;
+    }
+
     static bool millerRabinTest(const uint512_t &number) {
         const uint512_t decremented = number - 1;
 
@@ -107,7 +176,7 @@ public:
         //All the checks were true so we return true
 
         return true;
-    };
+    }
 
     static uint512_t choseRandomPrime() {
         uint512_t random = getRandomUint512();
@@ -123,7 +192,7 @@ public:
         return random;
     };
 
-    static std::pair<uint512_t, uint1024_t> createKeys() {
+    static std::pair<uint1024_t,std::pair<uint512_t, uint1024_t>> createModuleAndKeys() { //first element in pair is module, second is public, then private key
         const uint1024_t prime1 = choseRandomPrime();
         const uint1024_t prime2 = choseRandomPrime();
 
@@ -137,8 +206,7 @@ public:
 
         const uint1024_t privateKey = findPrivateKey(publicKey, phiModule);
 
-        return {publicKey, privateKey};
-
+        return {module, {publicKey, privateKey}};
     };
 
     static uint1024_t findPrivateKey(const uint512_t &publicKey, const uint1024_t &phiModule) {
