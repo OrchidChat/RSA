@@ -37,7 +37,7 @@ public:
 
 
         //if its divisible by 4
-        while ((smallestExpo & 1) == 0) {
+        while (smallestExpo % 2 == 0) {
             smallestExpo /= 2;
             exponentCounter++;
         }
@@ -123,7 +123,7 @@ public:
         return random;
     };
 
-    static std::pair<uint512_t, uint512_t> createKeys() {
+    static std::pair<uint512_t, uint1024_t> createKeys() {
         const uint1024_t prime1 = choseRandomPrime();
         const uint1024_t prime2 = choseRandomPrime();
 
@@ -131,14 +131,21 @@ public:
         const uint1024_t module = prime1 * prime2;
         const uint1024_t phiModule = (prime1 - 1) * (prime2 - 1);
 
-        const uint512_t publicKey = getRandomUint512();
-
 
         //chose e public exponent
+        const uint512_t publicKey = choseRandomPrime();
+
+        const uint1024_t privateKey = findPrivateKey(publicKey, phiModule);
+
+        return {publicKey, privateKey};
+
     };
 
-    static uint512_t findPrivateKey(const uint512_t &publicKey, const uint1024_t &phiModule) {
-        return static_cast<uint512_t>(gcde(publicKey, phiModule).first.first);
+    static uint1024_t findPrivateKey(const uint512_t &publicKey, const uint1024_t &phiModule) {
+        auto returnVal = gcde(phiModule, publicKey);
+        auto potentialReturnValue = (publicKey == returnVal.first.second) ? static_cast<int1024_t>(returnVal.first.first) : static_cast<int1024_t>(returnVal.second.first);
+        if (potentialReturnValue < 0) potentialReturnValue += phiModule;
+        return static_cast<uint1024_t>(potentialReturnValue);
     }
 
     static std::pair<std::pair<int1024_t, uint1024_t>, std::pair<int1024_t, uint1024_t> > gcde(

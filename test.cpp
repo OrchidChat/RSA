@@ -14,5 +14,8 @@ int main() {
     std::cout << dings.first.first << "&" << dings.first.second << "  " << dings.second.first << "&" << dings.second.
             second << std::endl;
 
+
+    std:: cout << RivestShamirAdlemanEncryption::findPrivateKey(240, 46) << std::endl;
+
     return 0;
 }
