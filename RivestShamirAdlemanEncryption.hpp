@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <random>
 #include <utility>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/random.hpp>
@@ -144,12 +145,16 @@ public:
     };
 
     static std::pair<uint512_t, uint512_t> createKeys(){
-        const uint512_t prime1 = choseRandomPrime();
-        const uint512_t prime2 = choseRandomPrime();
+        const uint1024_t prime1 = choseRandomPrime();
+        const uint1024_t prime2 = choseRandomPrime();
 
+        //Fits because prime1 and prime2 are just 512bits large at max
         const uint1024_t module = prime1 * prime2;
-
         const uint1024_t phiModule = (prime1 - 1) * (prime2 - 1);
+
+        const uint512_t publicKey = getRandomUint512();
+
+
 
 
 
@@ -158,6 +163,25 @@ public:
 
 
     };
+
+	static uint512_t findPrivateKey(const uint512_t &publicKey, const uint1024_t &phiModule) {
+        return static_cast<uint512_t>(gcde(publicKey, phiModule).first.first);
+	}
+
+    static std::pair<std::pair<int1024_t, uint1024_t>, std::pair<int1024_t,uint1024_t>> gcde(const uint1024_t &p1, const uint1024_t &p2) {
+        auto rest = p1 % p2;
+        uint1024_t mult = p1 / p1;
+	    if (p2 % rest == 0) return {{1, p1},{-1, p2}};
+
+	    auto returnEq = gcde(p2, p2 % p1);
+
+
+	    if (returnEq.second.second == rest) {
+	        return {{returnEq.first.first + mult.convert_to<int1024_t>() * returnEq.second.first, returnEq.first.second},{returnEq.second.first, p1}};
+	    }
+        return {{returnEq.first.first, p1},{returnEq.second.first + mult.convert_to<int1024_t>() * returnEq.first.first, returnEq.second.second}};
+    }
+
 
 
 

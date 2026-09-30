@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(RSA
         RivestShamirAdlemanEncryption.hpp
-        Testing.cpp)
+        test.cpp)
 
 
 target_include_directories(RSA PRIVATE
