@@ -9,8 +9,10 @@
 using namespace boost::multiprecision;
 
 int main() {
-
-
     auto dings = RivestShamirAdlemanEncryption::gcde(240, 46);
+
+    std::cout << dings.first.first << "&" << dings.first.second << "  " << dings.second.first << "&" << dings.second.
+            second << std::endl;
+
     return 0;
 }

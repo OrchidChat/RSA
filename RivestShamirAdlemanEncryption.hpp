@@ -14,9 +14,7 @@ using namespace boost::random;
 
 class RivestShamirAdlemanEncryption {
 public:
-
-
-    static uint512_t getRandomUint512(){
+    static uint512_t getRandomUint512() {
         uint512_t random;
 
         std::random_device random_device;
@@ -58,17 +56,11 @@ public:
             uint1024_t testNum = 1;
 
 
-
-
-
-
-
             int512_t smallestExpoCopy = smallestExpo;
 
 
             //Calculate the first number in the row
             while (smallestExpoCopy > 0) {
-
                 if ((smallestExpoCopy & 1) == 1) {
                     testNum = (testNum * testNumOriginal) % number;
                 }
@@ -79,12 +71,8 @@ public:
             }
 
 
-
-
-
             //Testing if it's -1 or 1 if so we break and don't need to continue for this a
             if (testNum == decremented || testNum == 1) {
-
                 continue;
             }
 
@@ -98,7 +86,6 @@ public:
 
                 //Last column and we didn't have -1 yet so
                 if (exponentCounter == 0) {
-
                     return false;
                 }
 
@@ -110,19 +97,11 @@ public:
 
                 //gets caught if it's 1 without a -1 before so return false
                 if (testNum == 1) {
-
                     return false;
                 }
-
-
             }
 
             if (testNum != 1 && testNum != decremented) return false;
-
-
-
-
-
         }
 
         //All the checks were true so we return true
@@ -144,7 +123,7 @@ public:
         return random;
     };
 
-    static std::pair<uint512_t, uint512_t> createKeys(){
+    static std::pair<uint512_t, uint512_t> createKeys() {
         const uint1024_t prime1 = choseRandomPrime();
         const uint1024_t prime2 = choseRandomPrime();
 
@@ -155,35 +134,32 @@ public:
         const uint512_t publicKey = getRandomUint512();
 
 
-
-
-
-
         //chose e public exponent
-
-
     };
 
-	static uint512_t findPrivateKey(const uint512_t &publicKey, const uint1024_t &phiModule) {
+    static uint512_t findPrivateKey(const uint512_t &publicKey, const uint1024_t &phiModule) {
         return static_cast<uint512_t>(gcde(publicKey, phiModule).first.first);
-	}
-
-    static std::pair<std::pair<int1024_t, uint1024_t>, std::pair<int1024_t,uint1024_t>> gcde(const uint1024_t &p1, const uint1024_t &p2) {
-        auto rest = p1 % p2;
-        uint1024_t mult = p1 / p1;
-	    if (p2 % rest == 0) return {{1, p1},{-1, p2}};
-
-	    auto returnEq = gcde(p2, p2 % p1);
-
-
-	    if (returnEq.second.second == rest) {
-	        return {{returnEq.first.first + mult.convert_to<int1024_t>() * returnEq.second.first, returnEq.first.second},{returnEq.second.first, p1}};
-	    }
-        return {{returnEq.first.first, p1},{returnEq.second.first + mult.convert_to<int1024_t>() * returnEq.first.first, returnEq.second.second}};
     }
 
+    static std::pair<std::pair<int1024_t, uint1024_t>, std::pair<int1024_t, uint1024_t> > gcde(
+        const uint1024_t &p1, const uint1024_t &p2) {
+        auto rest = p1 % p2;
+        uint1024_t mult = p1 / p2;
+        if (p2 % rest == 0)
+            return {{1, p1}, {-1, p2}};
+
+        auto returnEq = gcde(p2, p1 % p2);
 
 
-
-
+        if (returnEq.second.second == rest) {
+            return {
+                {returnEq.first.first + -mult.convert_to<int1024_t>() * returnEq.second.first, returnEq.first.second},
+                {returnEq.second.first, p1}
+            };
+        }
+        return {
+            {returnEq.first.first, p1},
+            {returnEq.second.first + -mult.convert_to<int1024_t>() * returnEq.first.first, returnEq.second.second}
+        };
+    }
 };
