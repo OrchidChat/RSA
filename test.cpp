@@ -15,18 +15,28 @@ int main() {
     uint1024_t privateKey = keys.second.second;
     uint1024_t module = keys.first;
 
+
+    // uint512_t testNumber = 100;
+    // std::cout << "unencrypted: " << testNumber << std::endl;
+    // auto encrypted = RivestShamirAdlemanEncryption::exponentModulo(testNumber, publicKey, module);
+    // std::cout << "encrypted: " << encrypted << std::endl;
+    // auto decrypted = RivestShamirAdlemanEncryption::exponentModulo(encrypted, privateKey, module);
+    // std::cout << "decrypted: " << decrypted << std::endl;
+
+
     // uint512_t publicKey = 5;
     // uint1024_t phi = 756;
     // uint1024_t privateKey = 605;
     // uint1024_t module = 817;
 
-    std::cout << "publicKey: " << publicKey << std::endl;
-    std::cout << "privateKey: " << privateKey << std::endl;
-    std::cout << "Module: " << module << std::endl;
+    // std::cout << "publicKey: " << publicKey << std::endl;
+    // std::cout << "privateKey: " << privateKey << std::endl;
+    // std::cout << "Module: " << module << std::endl;
 
     std::vector<uint8_t> message;
-    message.push_back('S');
-    std::cout << "raw: " << message[0] << "\n\n" << std::endl;
+    message.push_back(108);
+    message.push_back(108);
+    std::cout << "raw: " << message[0] << message[1] << "\n\n" << std::endl;
 
     std::vector<uint8_t> encryptedMessage = RivestShamirAdlemanEncryption::encrypt(message, publicKey, module);
 
@@ -41,7 +51,7 @@ int main() {
 
     std::vector<uint8_t> decryptedMessage = RivestShamirAdlemanEncryption::decrypt(encryptedMessage, privateKey, module);
 
-    std::cout << decryptedMessage[0] << std::endl;
+    std::cout << decryptedMessage[0]<< decryptedMessage[1] << std::endl;
 
     // uint1024_t privateKey = RivestShamirAdlemanEncryption::getPrivateKey(publicKey, phi);
     // std::cout << "Private Key: " << privateKey << std::endl;

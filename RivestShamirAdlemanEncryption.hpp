@@ -14,6 +14,13 @@ using namespace boost::random;
 
 class RivestShamirAdlemanEncryption {
 public:
+
+    using uint2048_t = boost::multiprecision::number<
+    boost::multiprecision::cpp_int_backend<
+        2048, // MinBits: Direkt im Objekt gespeicherte Bits
+        2048, // MaxBits: Feste Maximale Bit-Größe
+        boost::multiprecision::unsigned_magnitude>
+>;
     static uint512_t getRandomUint512() {
         uint512_t random;
 
@@ -99,8 +106,8 @@ public:
     }
 
 
-    static uint1024_t exponentModulo(uint1024_t input, uint1024_t exponent, const uint1024_t &modulo) {
-        uint1024_t currentState = input;
+    static uint1024_t exponentModulo(uint2048_t input, uint1024_t exponent, const uint1024_t &modulo) {
+        uint2048_t currentState = input;
         input = 1;
         while (exponent > 0) {
             if ((exponent & 1) == 1) {
@@ -112,7 +119,7 @@ public:
             exponent >>= 1;
         }
 
-        return input;
+        return static_cast<uint1024_t>(input);
     }
 
     static bool millerRabinTest(const uint512_t &number) {
@@ -212,9 +219,11 @@ public:
     };
 
     static std::pair<uint1024_t, std::pair<uint512_t, uint1024_t> > createModuleAndKeys() {
-        //first element in pair is module, second is public, then private key
-        const uint512_t prime1 = choseRandomPrime();
-        const uint512_t prime2 = choseRandomPrime();
+
+
+        //uint1024 because else the multiplication below overflows
+        const uint1024_t prime1 = choseRandomPrime();
+        const uint1024_t prime2 = choseRandomPrime();
 
 
         //Fits because prime1 and prime2 are just 512bits large at max
@@ -222,9 +231,8 @@ public:
         const uint1024_t phiModule = (prime1 - 1) * (prime2 - 1);
 
         //chose e public exponent
-        const uint512_t publicKey = (2 << 15) - 1;
+        const uint512_t publicKey = (2 << 15) + 1;
 
-        std::cout << "phi module: " << phiModule << std::endl;
 
         const uint1024_t privateKey = getPrivateKey(uint1024_t(publicKey), phiModule);
 
@@ -239,7 +247,7 @@ public:
     static std::pair<int1024_t, int1024_t> gcde(const uint1024_t &a, const uint1024_t &b) {
         auto res = gcdeInner(a, b);
 
-        return std::pair<int1024_t, int1024_t>((res.first.second == a)
+        return std::pair<int1024_t, int1024_t>((res.second.second == a)
                                                    ? std::make_pair(res.first.first, res.second.first)
                                                    : std::make_pair(res.second.first, res.first.first));
     }
