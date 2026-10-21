@@ -36,7 +36,7 @@ public:
     };
 
 
-    static std::vector<uint8_t> encrypt(const std::vector<uint8_t> &message, const uint512_t &publicKey,
+    static std::string encrypt(const std::string &message, const uint512_t &privateKey,
                                         const uint1024_t &module) {
         std::vector<uint512_t> messageInParts(1);
 
@@ -57,11 +57,12 @@ public:
         std::vector<uint1024_t> encryptedMessage(messageInParts.size());
 
         for (int i = 0; i < messageInParts.size(); i++) {
-            encryptedMessage[i] = exponentModulo(messageInParts[i], publicKey, module);
+            encryptedMessage[i] = exponentModulo(messageInParts[i], privateKey, module);
         }
 
-        std::vector<uint8_t> output;
+        std::string output;
         output.reserve(128 * encryptedMessage.size());
+
 
         for (const auto &i: encryptedMessage) {
             export_bits(i, std::back_inserter(output), 8, false);
@@ -71,11 +72,11 @@ public:
     }
 
 
-    static std::vector<uint8_t> decrypt(const std::vector<uint8_t> &message, const uint1024_t &publicKey,
+    static std::string decrypt(std::string &message, const uint1024_t &publicKey,
                                         const uint1024_t &module) {
 
-
         std::vector<uint1024_t> messageInParts(1);
+
 
         int used = 0;
         int currentPart = 0;
@@ -86,18 +87,19 @@ public:
                 currentPart++;
                 messageInParts.emplace_back(0);
             }
-            temp = message[i];
+            temp = static_cast<uint8_t>(message[i]);
             temp <<= used;
             messageInParts[currentPart] += temp;
         }
 
         std::vector<uint512_t> decryptedMessage(messageInParts.size());
 
+
         for (int i = 0; i < messageInParts.size(); i++) {
             decryptedMessage[i] = static_cast<uint512_t>(exponentModulo(messageInParts[i], publicKey, module));
         }
 
-        std::vector<uint8_t> output;
+        std::string output;
         output.reserve(64 * decryptedMessage.size());
 
         for (const auto &i: decryptedMessage) {

@@ -35,9 +35,7 @@ int main() {
     // std::cout << "privateKey: " << privateKey << std::endl;
     // std::cout << "Module: " << module << std::endl;
 
-    std::vector<uint8_t> message;
-    message.push_back(108);
-    message.push_back(109);
+    std::string message = "hallo welt!";
     std::string test = "lm";
     std::cout << "raw: ";
 
@@ -45,7 +43,7 @@ int main() {
 
     std::cout << "\n\n" << std::endl;
 
-    std::vector<uint8_t> encryptedMessage = RivestShamirAdlemanEncryption::encrypt(message, publicKey, module);
+    std::string encryptedMessage = RivestShamirAdlemanEncryption::encrypt(message, publicKey, module);
 
     std::cout << "encrypted: ";
 
@@ -56,7 +54,7 @@ int main() {
     std::cout << std::endl;
     std::cout << "\n\ndecrypted: " << std::endl;
 
-    std::vector<uint8_t> decryptedMessage =
+    std::string decryptedMessage =
             RivestShamirAdlemanEncryption::decrypt(encryptedMessage, privateKey, module);
 
     for (const uint8_t character: decryptedMessage) std::cout << character;
