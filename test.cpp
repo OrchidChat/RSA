@@ -47,7 +47,7 @@ int main() {
     }
 
     std::cout << std::endl;
-    std::cout << "\n\ndecrypte: " << std::endl;
+    std::cout << "\n\ndecrypted: " << std::endl;
 
     std::vector<uint8_t> decryptedMessage = RivestShamirAdlemanEncryption::decrypt(encryptedMessage, privateKey, module);
 
