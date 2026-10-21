@@ -73,6 +73,8 @@ public:
 
     static std::vector<uint8_t> decrypt(const std::vector<uint8_t> &message, const uint1024_t &publicKey,
                                         const uint1024_t &module) {
+
+
         std::vector<uint1024_t> messageInParts(1);
 
         int used = 0;
@@ -101,6 +103,8 @@ public:
         for (const auto &i: decryptedMessage) {
             export_bits(i, std::back_inserter(output), 8, true);
         }
+
+        std::ranges::reverse(output);
 
         return output;
     }
