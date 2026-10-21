@@ -29,61 +29,79 @@ public:
     };
 
 
-    static std::string encrypt(const std::string &message, const uint512_t &publicKey, const uint1024_t &module) {
+    static std::vector<uint8_t> encrypt(const std::vector<uint8_t> &message, const uint512_t &publicKey,
+                                        const uint1024_t &module) {
         std::vector<uint512_t> messageInParts(1);
 
         int used = 0;
         int currentPart = 0;
         uint512_t temp;
         for (int i = 0; i < message.size(); i++, used += 8) {
-            if (used == 512) {used = 0; currentPart++; messageInParts.emplace_back(0);}
+            if (used == 512) {
+                used = 0;
+                currentPart++;
+                messageInParts.emplace_back(0);
+            }
             temp = message[i];
             temp <<= used;
-            messageInParts[i] += temp;
+            messageInParts[currentPart] += temp;
         }
 
-        for (auto & messageInPart : messageInParts) {
-            messageInPart = static_cast<uint512_t>(exponentModulo(messageInPart, publicKey, module));
+        std::vector<uint1024_t> encryptedMessage(messageInParts.size());
+
+        for (int i = 0; i < messageInParts.size(); i++) {
+            encryptedMessage[i] = exponentModulo(messageInParts[i], publicKey, module);
         }
 
-        std::string output;
+        std::vector<uint8_t> output;
+        output.reserve(128 * encryptedMessage.size());
 
-        for (const auto & messageInPart: messageInParts) {
-            output += std::string(reinterpret_cast<const char*>(&messageInPart), sizeof(messageInPart));
+        for (const auto &i: encryptedMessage) {
+            export_bits(i, std::back_inserter(output), 8, false);
         }
 
         return output;
     }
 
 
-    static std::string decrypt(const std::string &message, const uint1024_t &publicKey, const uint1024_t &module) {
-        std::vector<uint512_t> messageInParts(1);
+    static std::vector<uint8_t> decrypt(const std::vector<uint8_t> &message, const uint1024_t &publicKey,
+                                        const uint1024_t &module) {
+        std::vector<uint1024_t> messageInParts(1);
 
         int used = 0;
         int currentPart = 0;
-        uint512_t temp;
+        uint1024_t temp;
         for (int i = 0; i < message.size(); i++, used += 8) {
-            if (used == 512) {used = 0; currentPart++; messageInParts.emplace_back(0);}
+            if (used == 1024) {
+                used = 0;
+                currentPart++;
+                messageInParts.emplace_back(0);
+            }
             temp = message[i];
             temp <<= used;
-            messageInParts[i] += temp;
+            messageInParts[currentPart] += temp;
         }
 
-        for (auto & messageInPart : messageInParts) {
-            messageInPart = static_cast<uint512_t>(exponentModulo(messageInPart, publicKey, module));
+        std::vector<uint512_t> decryptedMessage(messageInParts.size());
+
+        for (int i = 0; i < messageInParts.size(); i++) {
+            decryptedMessage[i] = static_cast<uint512_t>(exponentModulo(messageInParts[i], publicKey, module));
         }
 
-        std::string output;
+        std::vector<uint8_t> output;
+        output.reserve(64 * decryptedMessage.size());
 
-        for (const auto & messageInPart: messageInParts) {
-            output += std::string(reinterpret_cast<const char*>(&messageInPart), sizeof(messageInPart));
+        for (const auto &i: decryptedMessage) {
+            export_bits(i, std::back_inserter(output), 8, true);
         }
 
         return output;
     }
 
-    static uint1024_t exponentModulo( uint1024_t input, uint1024_t exponent, const uint1024_t &modulo) {
+
+    static uint1024_t exponentModulo(uint1024_t input, uint1024_t exponent, const uint1024_t &modulo) {
         uint1024_t currentState = input;
+        input = 1;
         while (exponent > 0) {
             if ((exponent & 1) == 1) {
                 input = (input * currentState) % modulo;
@@ -180,61 +198,72 @@ public:
 
     static uint512_t choseRandomPrime() {
         uint512_t random = getRandomUint512();
-        random <<= 1;
-        --random;
+
+        if (random % 2 == 0) random--;
+
 
         while (!millerRabinTest(random)) {
             random = getRandomUint512();
-            random <<= 1;
-            --random;
+
+            if (random % 2 == 0) random--;
         }
 
         return random;
     };
 
-    static std::pair<uint1024_t,std::pair<uint512_t, uint1024_t>> createModuleAndKeys() { //first element in pair is module, second is public, then private key
-        const uint1024_t prime1 = choseRandomPrime();
-        const uint1024_t prime2 = choseRandomPrime();
+    static std::pair<uint1024_t, std::pair<uint512_t, uint1024_t> > createModuleAndKeys() {
+        //first element in pair is module, second is public, then private key
+        const uint512_t prime1 = choseRandomPrime();
+        const uint512_t prime2 = choseRandomPrime();
+
 
         //Fits because prime1 and prime2 are just 512bits large at max
         const uint1024_t module = prime1 * prime2;
         const uint1024_t phiModule = (prime1 - 1) * (prime2 - 1);
 
-
         //chose e public exponent
-        const uint512_t publicKey = choseRandomPrime();
+        const uint512_t publicKey = (2 << 15) - 1;
 
-        const uint1024_t privateKey = findPrivateKey(publicKey, phiModule);
+        std::cout << "phi module: " << phiModule << std::endl;
+
+        const uint1024_t privateKey = getPrivateKey(uint1024_t(publicKey), phiModule);
 
         return {module, {publicKey, privateKey}};
     };
 
-    static uint1024_t findPrivateKey(const uint512_t &publicKey, const uint1024_t &phiModule) {
-        auto returnVal = gcde(phiModule, publicKey);
-        auto potentialReturnValue = (publicKey == returnVal.first.second) ? static_cast<int1024_t>(returnVal.first.first) : static_cast<int1024_t>(returnVal.second.first);
-        if (potentialReturnValue < 0) potentialReturnValue += phiModule;
-        return static_cast<uint1024_t>(potentialReturnValue);
+    static uint1024_t getPrivateKey(const uint1024_t &publicKey, const uint1024_t &phi) {
+        auto res = gcde(phi, publicKey);
+        return static_cast<uint1024_t>((res.first % phi + phi) % phi);
     }
 
-    static std::pair<std::pair<int1024_t, uint1024_t>, std::pair<int1024_t, uint1024_t> > gcde(
-        const uint1024_t &p1, const uint1024_t &p2) {
-        auto rest = p1 % p2;
-        uint1024_t mult = p1 / p2;
-        if (p2 % rest == 0)
-            return {{1, p1}, {-1, p2}};
+    static std::pair<int1024_t, int1024_t> gcde(const uint1024_t &a, const uint1024_t &b) {
+        auto res = gcdeInner(a, b);
 
-        auto returnEq = gcde(p2, p1 % p2);
+        return std::pair<int1024_t, int1024_t>((res.first.second == a)
+                                                   ? std::make_pair(res.first.first, res.second.first)
+                                                   : std::make_pair(res.second.first, res.first.first));
+    }
+
+    static std::pair<std::pair<int1024_t, uint1024_t>, std::pair<int1024_t, uint1024_t> > gcdeInner(
+        const uint1024_t &a, const uint1024_t &b) {
+        uint1024_t r = a % b;
+        int1024_t q = a / b;
+        if (not(b % r))
+            return {{1, a}, {-q, b}};
+
+        auto lastLayer = gcdeInner(b, r);
 
 
-        if (returnEq.second.second == rest) {
+        if (lastLayer.first.second == r) {
             return {
-                {returnEq.first.first + -mult.convert_to<int1024_t>() * returnEq.second.first, returnEq.first.second},
-                {returnEq.second.first, p1}
+                {lastLayer.first.first, a},
+                {lastLayer.second.first + (-q * lastLayer.first.first), lastLayer.second.second}
+            };
+        } else {
+            return {
+                {lastLayer.first.first + (-q * lastLayer.second.first), lastLayer.first.second},
+                {lastLayer.second.first, a}
             };
         }
-        return {
-            {returnEq.first.first, p1},
-            {returnEq.second.first + -mult.convert_to<int1024_t>() * returnEq.first.first, returnEq.second.second}
-        };
     }
 };
