@@ -14,4 +14,5 @@ target_include_directories(RSA PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/external)
 
 
-target_link_libraries(RSA PRIVATE embind)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -static-libgcc -static-libstdc++")
+#target_link_libraries(RSA PRIVATE embind)

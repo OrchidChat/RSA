@@ -34,5 +34,18 @@
         emscripten::function("decryptMessage", &decryptMessage);
     }
 
+    int main() {
+        auto keys = RivestShamirAdlemanEncryption::createModuleAndKeys();
+        std::string message = "Hallo welt";
+        std::string encrypted = encryptMessage(message, keys.second.first.str(), keys.first.str());
+        std::string decrypted = encryptMessage(message, keys.second.second.str(), keys.first.str());
+
+        std::cout << "message :" << message << std::endl;
+        std::cout << "Encrypted :" << encrypted << std::endl;
+        std::cout << "decrypted :" << decrypted << std::endl;
+
+        return 0;
+    }
+
 
 
