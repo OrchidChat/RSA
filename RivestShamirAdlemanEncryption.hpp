@@ -72,7 +72,7 @@ public:
     }
 
 
-    static std::string decrypt(std::string &message, const uint1024_t &publicKey,
+    static std::string decrypt(const std::string &message, const uint1024_t &publicKey,
                                         const uint1024_t &module) {
 
         std::vector<uint1024_t> messageInParts(1);
